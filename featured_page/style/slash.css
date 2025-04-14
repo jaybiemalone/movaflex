@@ -1,0 +1,17 @@
+.slash-container{
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.slash-container .banner{
+    width: 100%;
+    height: 50vh;
+    background: url(/asset/feature-product-home-page/slash.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
