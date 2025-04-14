@@ -1,0 +1,7 @@
+.box1-container .banner,
+.box1-container .product-des,
+.box1-container .box1-gallary,
+.box1-container .get-in-touch{
+    width: 100%;
+    height: 100vh;
+}
