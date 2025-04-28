@@ -1,79 +1,63 @@
 <?php
-include "config.php"; // Database connection
+@include 'config.php'; // Make sure config.php connects to your DB
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (isset($_POST['category'], $_POST['name'], $_POST['special_name'], $_FILES["product_image"])) {
-        
-        // Sanitize inputs
-        $category = $conn->real_escape_string($_POST['category']);
-        $product_name = trim($_POST['name']);
-        $special_name = trim($_POST['special_name']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get form data
+    $product_brand = trim($_POST['product_brand']);
+    $name = trim($_POST['name']);
+    $surface_material = trim($_POST['surface_material']);
+    $filter = trim($_POST['filter']);
 
-        // Validate category table
-        $tableCheckQuery = "SHOW TABLES LIKE '$category'";
-        $result = $conn->query($tableCheckQuery);
-        if (!$result || $result->num_rows != 1) {
-            die("Error: Selected category does not exist.");
+    // Handle file upload
+    if (isset($_FILES['product_image_file_path']) && $_FILES['product_image_file_path']['error'] === 0) {
+        $file_tmp_path = $_FILES['product_image_file_path']['tmp_name'];
+        $file_name = $_FILES['product_image_file_path']['name'];
+        $file_extension = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+        // Allowed extensions
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        if (!in_array($file_extension, $allowed_extensions)) {
+            die('Invalid file type. Only JPG, JPEG, PNG, GIF, and WEBP are allowed.');
         }
 
-        // Handle file upload securely
-        $targetDir = "uploads/";
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0777, true);
+        // Make safe folder name
+        $safe_brand = preg_replace('/[^A-Za-z0-9]/', '_', strtolower($product_brand));
+        $destination_folder = "htdocs/movaflex/inventory_product/{$safe_brand}_brand/";
+
+        // Create folder if not exist
+        if (!is_dir($destination_folder)) {
+            mkdir($destination_folder, 0755, true);
         }
 
-        $fileTmpPath = $_FILES["product_image"]["tmp_name"];
-        $fileOriginalName = $_FILES["product_image"]["name"];
-        $imageFileType = strtolower(pathinfo($fileOriginalName, PATHINFO_EXTENSION));
-        $allowedTypes = ["jpg", "jpeg", "png", "gif"];
-        $fileSize = $_FILES["product_image"]["size"];
+        // Unique file name to avoid overwrite
+        $new_file_name = uniqid() . '.' . $file_extension;
+        $destination_path = $destination_folder . $new_file_name;
+        echo "File saved to: " . $destination_path . "<br>";
 
-        // Validate file type & size
-        $imageInfo = getimagesize($fileTmpPath);
-        if (!$imageInfo || !in_array($imageFileType, $allowedTypes) || $fileSize > 2 * 1024 * 1024) {
-            die("Invalid file type or file too large (max 2MB). ");
-        }
+        if (move_uploaded_file($file_tmp_path, $destination_path)) {
+            // Store the relative path (from the web root) in the database
+            $relative_path = "{$safe_brand}_brand/" . $new_file_name;
 
-        // Generate secure file name
-        $fileName = uniqid("img_", true) . "." . $imageFileType;
-        $targetFilePath = $targetDir . $fileName;
+            // Insert into database
+            $stmt = $conn->prepare("INSERT INTO inventory (product_brand, name, product_image_path, surface_material, filter) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssss", $product_brand, $name, $relative_path, $surface_material, $filter);
 
-        if (move_uploaded_file($fileTmpPath, $targetFilePath)) {
-            
-            // Check if product exists
-            $check_sql = "SELECT id FROM `$category` WHERE product_name = ?";
-            $stmt = $conn->prepare($check_sql);
-            $stmt->bind_param("s", $product_name);
-            $stmt->execute();
-            $stmt->store_result();
-
-            if ($stmt->num_rows > 0) {
-                // Update existing product
-                $update_sql = "UPDATE `$category` SET product_picture = ?, special_name = ? WHERE product_name = ?";
-                $update_stmt = $conn->prepare($update_sql);
-                $update_stmt->bind_param("sss", $fileName, $special_name, $product_name);
-                $update_stmt->execute();
-                $update_stmt->close();
+            if ($stmt->execute()) {
+                echo "<script>alert('Product added successfully!'); window.location.href='add-product.php';</script>";
             } else {
-                // Insert new product
-                $insert_sql = "INSERT INTO `$category` (product_name, product_picture, special_name) VALUES (?, ?, ?)";
-                $insert_stmt = $conn->prepare($insert_sql);
-                $insert_stmt->bind_param("sss", $product_name, $fileName, $special_name);
-                $insert_stmt->execute();
-                $insert_stmt->close();
+                echo "Error inserting into database: " . $stmt->error;
             }
-            $stmt->close();
 
-            // Redirect to product page
-            header("Location: add-product.php?success=1");
-            exit();
+            $stmt->close();
         } else {
-            echo "File upload failed. Please try again.";
+            echo "Error moving uploaded file.";
         }
     } else {
-        echo "Missing required fields.";
+        echo "No file uploaded or an error occurred.";
     }
+} else {
+    echo "Invalid request.";
 }
 
-$conn->close();
 ?>

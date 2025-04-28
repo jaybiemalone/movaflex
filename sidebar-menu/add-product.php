@@ -1,24 +1,8 @@
 <?php
-include "../config.php"; // Database connection
 
-// Fetch available table names that contain 'product_name' column
-$tables = [];
-$sql = "SHOW TABLES";
-$result = $conn->query($sql);
+@include 'config.php';
 
-while ($row = $result->fetch_array()) {
-  $tableName = $row[0];
-
-  // Check if 'product_name' column exists in the table
-  $checkColumnSql = "SHOW COLUMNS FROM `$tableName` LIKE 'product_name'";
-  $columnResult = $conn->query($checkColumnSql);
-
-  if ($columnResult->num_rows > 0) {
-    $tables[] = $tableName; // Store table names that have 'product_name'
-  }
-}
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -106,22 +90,21 @@ while ($row = $result->fetch_array()) {
       <h2>Add a New Product</h2>
 
       <form action="process.php" method="post" enctype="multipart/form-data">
-        <label for="category">Select Category Table:</label>
-        <select name="category" id="category" required>
-          <option value="">-- Select a Category --</option>
-          <?php foreach ($tables as $table): ?>
-            <option value="<?= htmlspecialchars($table) ?>"><?= htmlspecialchars($table) ?></option>
-          <?php endforeach; ?>
-        </select>
 
-        <label for="name">Product Name:</label>
+        <label for="product_brand">Product brand:</label>
+        <input type="text" name="product_brand" id="product_brand" required>
+
+        <label for="name">Name:</label>
         <input type="text" name="name" id="name" required>
 
-        <label for="special_name">Special Name:</label>
-        <input type="text" name="special_name" id="special_name" required>
+        <label for="product_image_file_path">Product Image:</label>
+        <input type="file" name="product_image_file_path" id="product_image_file_path" accept="image/*" required> <!-- i want to base where this file goes in data = brand like if brand have data like kokuyo it goes to folder inventory_product/kokuyo_brand/ , if lamex it goes to inventory_product/lamex_brand/ , alpha it going to inventory_product/alpha_brand/ , bevco it going to inventory_product/bevco_brand/ -->
 
-        <label for="product_image">Product Image:</label>
-        <input type="file" name="product_image" id="product_image" accept="image/*" required>
+        <label for="surface_material">surface material:</label>
+        <input type="text" name="surface_material" id="surface_material" required>
+
+        <label for="filter">filter:</label>
+        <input type="text" name="filter" id="filter" required>
 
         <input type="submit" value="Submit">
       </form>
