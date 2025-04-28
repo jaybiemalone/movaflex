@@ -55,13 +55,13 @@ if ($stmt) {
     $stmt->close();
 }
 
-// Get the selected table from the URL
+// Get the selected table from the URL haha
 $selected_table = isset($_GET['table']) ? htmlspecialchars($_GET['table']) : '';
 
 $products = [];
 
 if (!empty($selected_table) && in_array($selected_table, $tables)) {
-    // Fetch products from the selected table
+    // Fetch products from the selected table haha
     $productQuery = "SELECT * FROM `$selected_table`";
     $productResult = $conn->query($productQuery);
 

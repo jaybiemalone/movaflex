@@ -150,14 +150,15 @@ $result = mysqli_query($conn, $query);
           data-brand="<?php echo htmlspecialchars($row['product_brand']); ?>"
           data-material="<?php echo htmlspecialchars($row['surface_material']); ?>">
           <div class="product">
-            <!-- Ensure that product image path is correct -->
+            <!-- Corrected path to image -->
             <img
-              src="<?php echo 'inventory_product/' . htmlspecialchars($row['product_brand']) . '_brand/' . basename($row['product_image_path']); ?>"
+              src="/movaflex/inventory_product/<?php echo htmlspecialchars($row['product_brand']) . '_brand/' . basename($row['product_image_path']); ?>"
               alt="Product Image" style="width:150px;height:auto;">
             <h3><?php echo htmlspecialchars($row['name']); ?></h3>
           </div>
         </div>
       <?php endwhile; ?>
+
 
     </div>
 
